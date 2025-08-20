@@ -1,0 +1,81 @@
+#include <iostream>
+#include <queue>
+#include <vector>
+#include <set>
+#include <string>
+#include <tuple>
+using namespace std;
+
+const int N = 3;
+struct Node {
+    vector<vector<int>> state;
+    string moves;
+};
+
+bool isGoal(const vector<vector<int>>& state) {
+    vector<vector<int>> goal = {{1,2,3},{4,5,6},{7,8,0}};
+    return state == goal;
+}
+
+// Find the (row,col) of 0
+pair<int, int> findZero(const vector<vector<int>>& state) {
+    for(int i=0; i<N; i++)
+        for(int j=0; j<N; j++)
+            if(state[i][j] == 0) return {i,j};
+    return {-1,-1};
+}
+
+vector<Node> getNeighbors(Node node) {
+    int dr[] = {-1,1,0,0};
+    int dc[] = {0,0,-1,1};
+    char mv[] = {'U','D','L','R'};
+    vector<Node> neighbors;
+    int r, c;
+    tie(r,c) = findZero(node.state);
+
+    for(int k=0;k<4;k++) {
+        int nr=r+dr[k], nc=c+dc[k];
+        if(nr>=0 && nr<N && nc>=0 && nc<N){
+            vector<vector<int>> newState=node.state;
+            swap(newState[r][c],newState[nr][nc]);
+            neighbors.push_back({newState, node.moves+mv[k]});
+        }
+    }
+    return neighbors;
+}
+
+// For set hashing
+string stateToString(const vector<vector<int>>& s) {
+    string res="";
+    for(auto row:s) for(int x:row) res+=to_string(x);
+    return res;
+}
+
+void bfs(const vector<vector<int>>& start) {
+    queue<Node> q;
+    set<string> visited;
+    q.push({start,""});
+    visited.insert(stateToString(start));
+
+    while(!q.empty()) {
+        Node curr = q.front(); q.pop();
+        if(isGoal(curr.state)){
+            cout << "Found! Moves: " << curr.moves << endl;
+            return;
+        }
+        for(auto nei : getNeighbors(curr)){
+            string str = stateToString(nei.state);
+            if(!visited.count(str)){
+                visited.insert(str);
+                q.push(nei);
+            }
+        }
+    }
+    cout << "No solution." << endl;
+}
+
+int main() {
+    vector<vector<int>> puzzle = {{1,2,3},{4,0,6},{7,5,8}};
+    bfs(puzzle);
+    return 0;
+}
