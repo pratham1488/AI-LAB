@@ -1,0 +1,67 @@
+#include <iostream>
+#include <stack>
+#include <vector>
+#include <set>
+using namespace std;
+
+const int N = 3;
+struct Node {
+    vector<vector<int>> state;
+    string moves;
+};
+
+bool isGoal(const vector<vector<int>>& state) {
+    vector<vector<int>> goal = {{1,2,3},{4,5,6},{7,8,0}};
+    return state == goal;
+}
+pair<int,int> findZero(const vector<vector<int>>& state) {
+    for(int i=0;i<N;i++)
+        for(int j=0;j<N;j++)
+            if(state[i][j]==0) return {i,j};
+    return {-1,-1};
+}
+vector<Node> getNeighbors(Node node) {
+    int dr[]={-1,1,0,0}, dc[]={0,0,-1,1};
+    char mv[]={'U','D','L','R'};
+    vector<Node> neighbors;
+    int r, c; tie(r,c) = findZero(node.state);
+    for(int k=0;k<4;k++) {
+        int nr = r+dr[k], nc = c+dc[k];
+        if(nr>=0&&nr<N&&nc>=0&&nc<N){
+            vector<vector<int>> s = node.state;
+            swap(s[r][c],s[nr][nc]);
+            neighbors.push_back({s,node.moves+mv[k]});
+        }
+    }
+    return neighbors;
+}
+string stateToString(const vector<vector<int>>& s) {
+    string res=""; for(auto row:s) for(int x:row) res+=to_string(x); return res;
+}
+
+void dfs(const vector<vector<int>>& start) {
+    stack<Node> st;
+    set<string> visited;
+    st.push({start,""});
+    visited.insert(stateToString(start));
+    while(!st.empty()) {
+        Node curr = st.top(); st.pop();
+        if(isGoal(curr.state)) {
+            cout << "Found! Moves: " << curr.moves << endl;
+            return;
+        }
+        for(auto nei : getNeighbors(curr)){
+            string str = stateToString(nei.state);
+            if(!visited.count(str)){
+                visited.insert(str);
+                st.push(nei);
+            }
+        }
+    }
+    cout << "No solution.\n";
+}
+int main() {
+    vector<vector<int>> puzzle = {{1,2,3},{4,0,6},{7,5,8}};
+    dfs(puzzle);
+    return 0;
+}
