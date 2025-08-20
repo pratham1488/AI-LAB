@@ -1,0 +1,63 @@
+#include <iostream>
+#include <vector>
+#include <cmath>
+using namespace std;
+
+const int N = 3;
+struct Node {
+    vector<vector<int>> state;
+    string moves;
+    int h;
+};
+
+bool isGoal(const vector<vector<int>>& s) {
+    vector<vector<int>> goal = {{1,2,3},{4,5,6},{7,8,0}};
+    return s==goal;
+}
+
+int heuristic(const vector<vector<int>>& s) {
+    int h=0;
+    for(int i=0;i<N;i++) for(int j=0;j<N;j++)
+        if(s[i][j] && s[i][j]!=0)
+            h+=abs(i-(s[i][j]-1)/N)+abs(j-(s[i][j]-1)%N);
+    return h;
+}
+pair<int,int> findZero(const vector<vector<int>>& s) {
+    for(int i=0;i<N;i++) for(int j=0;j<N;j++) if(s[i][j]==0) return {i,j};
+    return {-1,-1};
+}
+vector<Node> getNeighbors(Node node) {
+    int dr[] = {-1,1,0,0}, dc[] = {0,0,-1,1};
+    char mv[] = {'U','D','L','R'};
+    vector<Node> nbs; int r,c; tie(r,c) = findZero(node.state);
+    for(int k=0;k<4;k++) {
+        int nr=r+dr[k], nc=c+dc[k];
+        if(nr>=0&&nr<N&&nc>=0&&nc<N){
+            auto s = node.state;
+            swap(s[r][c],s[nr][nc]);
+            nbs.push_back({s, node.moves+mv[k], heuristic(s)});
+        }
+    }
+    return nbs;
+}
+void hill_climb(const vector<vector<int>>& start) {
+    Node curr = {start, "", heuristic(start)};
+    while(true) {
+        if(isGoal(curr.state)){
+            cout<<"Found! Moves: "<<curr.moves<<endl; return;
+        }
+        vector<Node> nbs = getNeighbors(curr);
+        Node best = curr;
+        for(auto& nb:nbs)
+            if(nb.h < best.h)
+                best = nb;
+        if(best.h >= curr.h) break; // local optima
+        curr = best;
+    }
+    cout<<"Stuck! Moves so far: "<<curr.moves<<endl;
+}
+int main() {
+    vector<vector<int>> puzzle = {{1,2,3},{4,0,6},{7,5,8}};
+    hill_climb(puzzle);
+    return 0;
+}
